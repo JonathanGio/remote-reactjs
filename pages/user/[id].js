@@ -1,28 +1,30 @@
 import Head from 'next/head'
-import Link from 'next/link'
-//List Users 
-import Users from '../src/components/Users/User'
+//Router
+import { useRouter } from 'next/router'
 //Styles 
-import Button from '../src/components/CustomButtons/Button.js'
+import Button from '../../src/components/CustomButtons/Button.js'
 //Fetch 
 import fetch from 'isomorphic-unfetch'
-//Axios
-import axios from 'axios'
 
+// material-ui components
+import { makeStyles } from "@material-ui/core/styles";
+// core components
+import Card from "../../src/components/Card/Card.js";
+import CardBody from "../../src/components/Card/CardBody.js";
+import CardFooter from "../../src/components/Card/CardFooter.js";
+import imagesStyles from "../../src/assets/jss/material-kit-react/imagesStyles.js";
+import { cardTitle } from "../../src/assets/jss/material-kit-react.js"
 
-Home.getInitialProps = async function(){
-  const res = await fetch('http://local.hmartepost.com/moodle38/webservice/rest/server.php?wstoken=11ef0da3e0d571ef0b33f3b8ceb7df39&wsfunction=tool_dataprivacy_get_users&moodlewsrestformat=json&query=0');
-  const data = await res.json();
-  return {
-    users: data
-  }
-}
+const styles = {
+    ...imagesStyles,
+    cardTitle,
+};
+const useStyles = makeStyles(styles);
 
-export default function Home(props) {
-
-
-  return (
-    <div className="container">
+const GetOneUser = (props) => {
+    const classes = useStyles();
+    return (
+        <div className="container">
       <Head>
         <title>List Users</title>
         <link rel="icon" href="/favicon.ico" />
@@ -31,13 +33,27 @@ export default function Home(props) {
       <main>         
 
         <h1 className="title">
-          <a href="#">Listado de Usuarios</a>
-        </h1>       
-    
-        <Button type="button" color="primary" href="/create-user">Crear Usuario</Button>
-        <div className="grid"> 
-        
-          <Users users={ props.users }/>            
+         <a> {props.user['0'].id}. {props.user['0'].fullname} ({props.user['0'].city}, {props.user['0'].country})</a>
+        </h1>                   
+        <div className="grid">          
+         
+          <Card style={{width: "20rem"}}>
+            <img
+                style={{height: "180px", width: "100%", display: "block"}}
+                className={classes.imgCardTop}
+                src={props.user['0'].profileimageurl}
+                alt="Card-img-cap"
+            />
+            <CardBody>
+                <h4 className={classes.cardTitle}>@{props.user['0'].username}</h4>
+                <p>{props.user['0'].description}</p>
+                <Button type="button" color="primary" href="/">Regresar</Button>
+                <Button type="button" color="rose">Actualizar datos</Button>
+            </CardBody>
+            <CardFooter className={classes.textMuted}>
+                Lenguaje: {props.user['0'].lang}
+            </CardFooter>
+            </Card>   
         </div>
       </main>
 
@@ -198,6 +214,14 @@ export default function Home(props) {
         }
       `}</style>
     </div>
-  )
+    )
 }
 
+GetOneUser.getInitialProps = async (ctx) => { 
+    const res = await fetch(`http://local.hmartepost.com/moodle38/webservice/rest/server.php?wstoken=11ef0da3e0d571ef0b33f3b8ceb7df39&wsfunction=core_user_get_users&moodlewsrestformat=json&criteria[0][key]=id&criteria[0][value]=${ctx.query.id}`);
+    const resJson = await res.json();
+    return { user: resJson.users }
+}
+
+
+export default GetOneUser;
